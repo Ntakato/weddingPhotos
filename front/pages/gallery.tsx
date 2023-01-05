@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 
 export default function Gallery() {
   const router = useRouter()
-  const [sessionKey, setSessionKey] = useState(typeof router.query.sessionKey === 'string' ? router.query.sessionKey : '')
+  const sessionKey = typeof router.query.sessionKey === 'string' ? router.query.sessionKey : ''
   const [itemData, setItemData] = useState([])
   const [targetNumber, setTargetNumber] = useState<number>()
 
