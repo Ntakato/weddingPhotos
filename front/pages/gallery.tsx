@@ -1,39 +1,58 @@
-import { Container, IconButton, InputBase, Paper, TextField } from '@material-ui/core'
-import Image from 'next/image'
+import { Backdrop, ImageList, ImageListItem, Modal } from '@material-ui/core'
 import styles from '../styles/Home.module.css'
-import SendIcon from '@mui/icons-material/Send';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from "next/router";
 
-export const TopImage: React.FC = () => (
-  <Image src="/24to_20220830RI-20.jpg" layout='fill' objectFit='contain' alt="img" />
-)
+export default function Gallery() {
+  const router = useRouter()
+  const [sessionKey, setSessionKey] = useState(typeof router.query.sessionKey === 'string' ? router.query.sessionKey : '')
+  const [itemData, setItemData] = useState([])
+  const [targetNumber, setTargetNumber] = useState<number>()
 
-const onclick = () => {
-  console.log('clicked')
-}
+  useEffect(() => {
+    if (!sessionKey) {
+      router.push('/')
+    }
+  }, [])
+  useEffect(() => {
+    const fetchImageUrls = async () => await fetch(
+      'https://rruqurz42h.execute-api.ap-northeast-1.amazonaws.com/images',
+      {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: sessionKey
+        },
+      })
+      .then(res => res.json())
+      .then(({ signedUrls }) => setItemData(signedUrls?.filter((url: string) => !url.includes('/?'))))
+    fetchImageUrls()
+  }, [])
 
-export default function Home() {
-  const [password, setPassword] = useState<string>('')
   return (
-    <>
-      <div className={styles.bg}>
-        <TopImage />
-      </div>
-
-
-      <Container maxWidth="sm">
-        <Paper component="form" className={styles.password}>
-          <div className={styles.description}>{"写真置き場"}</div>
-          <InputBase
-            placeholder="Password"
-            inputProps={{ 'aria-label': 'password' }}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => setPassword(e.target.value)}
-          />
-          <IconButton type="button" onClick={onclick} className={styles.icon} aria-label="search">
-            <SendIcon />
-          </IconButton>
-        </Paper>
-      </Container>
-    </>
+    <div>
+      <ImageList rowHeight={160} className={styles.imageList} cols={3}>
+        {itemData.map((img, i) => (
+          <ImageListItem key={img} cols={1}>
+            <img src={img} alt={`${i} image`} onClick={() => { setTargetNumber(i) }} />
+          </ImageListItem>
+        ))}
+      </ImageList>
+      <Modal
+        aria-labelledby="spring-modal-title"
+        aria-describedby="spring-modal-description"
+        className={styles.modal}
+        open={targetNumber !== undefined}
+        onClose={() => setTargetNumber(undefined)}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <img className={styles.modalImage} src={itemData[targetNumber || 0]} alt={`${targetNumber} image`} />
+      </Modal>
+    </div>
   )
 }

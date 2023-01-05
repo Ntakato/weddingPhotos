@@ -2,8 +2,10 @@ const AWS = require("aws-sdk")
 const express = require("express")
 const serverless = require("serverless-http")
 const crypto = require('crypto')
+const cors = require('cors')
 
 const app = express()
+app.use(cors())
 
 const SESSION_KEY_TABLE = process.env.SESSION_KEY_TABLE
 const BUCKET_NAME = process.env.S3_BUCKET
@@ -17,6 +19,7 @@ app.use(express.json())
 const ONE_DAY_MILLIS = 24 * 60 * 60 * 1000
 
 app.get("/images", async function (req, res) {
+  console.log(req.headers)
   const { authorization } = req.headers
   if (!authorization) {
     return res.status(403).json({ status: 403, message: 'auth error' })
@@ -43,7 +46,7 @@ app.get("/images", async function (req, res) {
   }
   const imageKeys = await s3.listObjectsV2(s3ListObjectRequest).promise()
     .then(({ Contents }) => Contents.map(({ Key }) => Key))
-  const signedUrls = await Promise.all(imageKeys.map(key => s3.getSignedUrl('getObject', { Bucket: BUCKET_NAME, Key: key })))
+  const signedUrls = await Promise.all(imageKeys.map(key => s3.getSignedUrl('getObject', { Bucket: BUCKET_NAME, Key: key, Expires: 24 * 60 * 60 })))
   return res.json({ signedUrls })
 })
 

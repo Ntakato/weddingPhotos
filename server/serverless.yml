@@ -11,6 +11,8 @@ provider:
   name: aws
   region: ap-northeast-1
   runtime: nodejs16.x
+  httpApi:
+    cors: true
   iam:
     role:
       statements:

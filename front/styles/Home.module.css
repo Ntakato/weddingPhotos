@@ -10,11 +10,18 @@
 .bg {
   position: absolute;
   width: 100vw;
-  min-height: 100vh;
-  top: 0px;
+  height: auto;
+  top: auto;
   left: 0px;
   background-size: cover;
   background-position: top center;
+}
+
+.modalImage {
+  position: relative;
+  width: 70vw;
+  height: auto;
+  margin: auto;
 }
 
 .description {
@@ -61,6 +68,19 @@
 
 .icon {
   padding: 10;
+}
+
+.imageList {
+  width: 500;
+  height: 450;
+}
+
+.modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  width: 70%;
 }
 
 .card {
