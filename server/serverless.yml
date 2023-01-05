@@ -1,0 +1,71 @@
+org: takato
+app: server
+service: server
+frameworkVersion: '3'
+
+custom:
+  tableName: 'session-key-${sls:stage}'
+  bucketName: 't-y-wedding-images'
+
+provider:
+  name: aws
+  region: ap-northeast-1
+  runtime: nodejs16.x
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - Fn::GetAtt: [ UsersTable, Arn ]
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+          Resource:
+            - "arn:aws:s3:::${self:custom.bucketName}/*"
+        - Effect: Allow
+          Action:
+            - s3:ListBucket
+          Resource:
+            - "arn:aws:s3:::${self:custom.bucketName}"
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+            - "sts:AssumeRole"
+          Resource:
+            - "*"
+  environment:
+    SESSION_KEY_TABLE: ${self:custom.tableName}
+    S3_BUCKET: ${self:custom.bucketName}
+
+functions:
+  api:
+    handler: handler.handler
+    events:
+      - httpApi: '*'
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: sessionKey
+            AttributeType: S
+        KeySchema:
+          - AttributeName: sessionKey
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tableName}
+    bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.bucketName}
+
